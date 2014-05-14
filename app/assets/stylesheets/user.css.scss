@@ -1,0 +1,21 @@
+// Place all the styles related to the user controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+html {
+  width: 100%;
+}
+body {
+  width: 100%;
+}
+.container {
+  margin: 0 auto;
+  width: 80%;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.hide {
+  display: none;
+}
