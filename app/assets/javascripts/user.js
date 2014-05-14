@@ -1,6 +1,6 @@
-# Place all the behaviors and hooks related to the matching controller here.
-# All this logic will automatically be available in application.js.
-# You can use CoffeeScript in this file: http://coffeescript.org/
+// # Place all the behaviors and hooks related to the matching controller here.
+// # All this logic will automatically be available in application.js.
+// # You can use CoffeeScript in this file: http://coffeescript.org/
 var spinner = new Spinner({color: '#ddd'});
 var firebaseRef = 'https://ezorder.firebaseio.com/';
 var firebaseUser = new Firebase(firebaseRef + "user/");
@@ -92,11 +92,10 @@ $(function() {
 
       firebaseUser.on('child_added', function(snapshot) {
         var order = snapshot.val();
-        var url = snapshot.ec.path.m[2];
-
+        var url = snapshot.bc.path.m[2];
         firebaseOrder.child(url).once('value', function(snapshot) {
           var order = snapshot.val();
-          var url = snapshot.ec.path.m[1];
+          var url = snapshot.bc.path.m[1];
           console.log(order);
           console.log(url);
 

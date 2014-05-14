@@ -13,4 +13,10 @@
 //= require jquery
 //= require jquery_ujs
 //= require turbolinks
+//= require angular.min
+//= require firebase
+//= require firebase-simple-login
+//= require bootstrap.min
+//= require sha256
+//= require spin.min
 //= require_tree .
