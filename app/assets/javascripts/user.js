@@ -2,34 +2,78 @@
 // # All this logic will automatically be available in application.js.
 // # You can use CoffeeScript in this file: http://coffeescript.org/
 var spinner = new Spinner({color: '#ddd'});
-var firebaseRef = 'https://ezorder.firebaseio.com/';
-var firebaseUser = new Firebase(firebaseRef + "user/");
-var firebaseOrder = new Firebase(firebaseRef + "order/")
+var firebaseRef;
+var firebaseUser;
+var firebaseOrder;
 var userName = "";
 var auth;
 
-function handleFileSelect(evt) {
-  var f = evt.target.files[0];
-  var reader = new FileReader();
-  reader.onload = (function(theFile) {
-    return function(e) {
-      var filePayload = e.target.result;
-      // Generate a location that can't be guessed using the file's contents and a random number
-      var hash = CryptoJS.SHA256(Math.random() + CryptoJS.SHA256(filePayload));
-      var f = new Firebase(firebaseRef + 'user/' + hash + '/filePayload');
-      spinner.spin(document.getElementById('spin'));
-      // Set the file payload to Firebase and register an onComplete handler to stop the spinner and show the preview
-      f.set(filePayload, function() {
-        spinner.stop();
-        document.getElementById("pano").src = e.target.result;
-        $('#file-upload').hide();
-        // Update the location bar so the URL can be shared with others
-        window.location.hash = hash;
+var ezorderApp = angular.module("EzOrderApp", ["firebase"]);
+
+function orderController($scope, $firebase) {
+  firebaseRef = "https://ezorder.firebaseio.com/";
+  firebaseUser = new Firebase(firebaseRef + "user/");
+  firebaseOrder = new Firebase(firebaseRef + "order/");
+  console.log("In OrderCTRL");
+  auth = new FirebaseSimpleLogin(firebaseUser, function(error, user) {
+    if (error) {f
+      // an error occurred while attempting login
+      console.log(error);
+    }
+    else if (user) {
+      // user authenticated with Firebase
+      $("#logout").show();
+      userName = user.displayName;
+      firebaseUser = firebaseUser.child(user.id);
+
+      firebaseUser.on('child_added', function(snapshot) {
+        var order = snapshot.val();
+        var url = snapshot.bc.path.m[2];
+        firebaseOrder.child(url).once('value', function(snapshot) {
+          var order = snapshot.val();
+          var url = snapshot.bc.path.m[1];
+          console.log(order);
+          console.log(url);
+
+          displayOrder(url, order);
+        });
       });
-    };
-  })(f);
-  reader.readAsDataURL(f);
+
+      console.log(firebaseRef + "user/" + user.id);
+      console.log(userName);
+    }
+    else {
+      $("#login").show();
+      console.log("Logged Out");
+      // user is logged out
+    }
+  });
+  // Automatically syncs everywhere in realtime
+  // $scope.order = $firebase(firebaseRef);
 }
+
+// function handleFileSelect(evt) {
+//   var f = evt.target.files[0];
+//   var reader = new FileReader();
+//   reader.onload = (function(theFile) {
+//     return function(e) {
+//       var filePayload = e.target.result;
+//       // Generate a location that can't be guessed using the file's contents and a random number
+//       var hash = CryptoJS.SHA256(Math.random() + CryptoJS.SHA256(filePayload));
+//       var f = new Firebase(firebaseRef + 'user/' + hash + '/filePayload');
+//       spinner.spin(document.getElementById('spin'));
+//       // Set the file payload to Firebase and register an onComplete handler to stop the spinner and show the preview
+//       f.set(filePayload, function() {
+//         spinner.stop();
+//         document.getElementById("pano").src = e.target.result;
+//         $('#file-upload').hide();
+//         // Update the location bar so the URL can be shared with others
+//         window.location.hash = hash;
+//       });
+//     };
+//   })(f);
+//   reader.readAsDataURL(f);
+// }
 
 function login() {
   // attempt to log the user in with your preferred authentication provider
@@ -79,39 +123,7 @@ $(function() {
     console.log(prior);
   });
 
-  auth = new FirebaseSimpleLogin(firebaseUser, function(error, user) {
-    if (error) {
-      // an error occurred while attempting login
-      console.log(error);
-    }
-    else if (user) {
-      // user authenticated with Firebase
-      $("#logout").show();
-      userName = user.displayName;
-      firebaseUser = firebaseUser.child(user.id);
 
-      firebaseUser.on('child_added', function(snapshot) {
-        var order = snapshot.val();
-        var url = snapshot.bc.path.m[2];
-        firebaseOrder.child(url).once('value', function(snapshot) {
-          var order = snapshot.val();
-          var url = snapshot.bc.path.m[1];
-          console.log(order);
-          console.log(url);
-
-          displayOrder(url, order);
-        });
-      });
-
-      console.log(firebaseRef + "user/" + user.id);
-      console.log(userName);
-    }
-    else {
-      $("#login").show();
-      console.log("Logged Out");
-      // user is logged out
-    }
-  });
 });
 
 function displayOrder(url, order) {
