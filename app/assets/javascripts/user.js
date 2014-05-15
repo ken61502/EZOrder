@@ -8,49 +8,50 @@ var firebaseOrder;
 var userName = "";
 var auth;
 
-var ezorderApp = angular.module("EzOrderApp", ["firebase"]);
+angular.module("EzOrderApp", ["firebase"])
+  .controller("OrderController", ["$scope", "$firebase", "$firebaseSimpleLogin",
+    function($scope, $firebase, $firebaseSimpleLogin) {
+      firebaseRef = "https://ezorder.firebaseio.com/";
+      firebaseUser = new Firebase(firebaseRef + "user/");
+      firebaseOrder = new Firebase(firebaseRef + "order/");
+      console.log("In OrderCTRL");
+      auth = new FirebaseSimpleLogin(firebaseUser, function(error, user) {
+        if (error) {
+          // an error occurred while attempting login
+          console.log(error);
+        }
+        else if (user) {
+          // user authenticated with Firebase
+          $("#logout").show();
+          userName = user.displayName;
+          firebaseUser = firebaseUser.child(user.id);
 
-function orderController($scope, $firebase) {
-  firebaseRef = "https://ezorder.firebaseio.com/";
-  firebaseUser = new Firebase(firebaseRef + "user/");
-  firebaseOrder = new Firebase(firebaseRef + "order/");
-  console.log("In OrderCTRL");
-  auth = new FirebaseSimpleLogin(firebaseUser, function(error, user) {
-    if (error) {f
-      // an error occurred while attempting login
-      console.log(error);
-    }
-    else if (user) {
-      // user authenticated with Firebase
-      $("#logout").show();
-      userName = user.displayName;
-      firebaseUser = firebaseUser.child(user.id);
+          firebaseUser.on('child_added', function(snapshot) {
+            var order = snapshot.val();
+            var url = snapshot.bc.path.m[2];
+            firebaseOrder.child(url).once('value', function(snapshot) {
+              var order = snapshot.val();
+              var url = snapshot.bc.path.m[1];
+              console.log(order);
+              console.log(url);
 
-      firebaseUser.on('child_added', function(snapshot) {
-        var order = snapshot.val();
-        var url = snapshot.bc.path.m[2];
-        firebaseOrder.child(url).once('value', function(snapshot) {
-          var order = snapshot.val();
-          var url = snapshot.bc.path.m[1];
-          console.log(order);
-          console.log(url);
+              displayOrder(url, order);
+            });
+          });
 
-          displayOrder(url, order);
-        });
+          console.log(firebaseRef + "user/" + user.id);
+          console.log(userName);
+        }
+        else {
+          $("#login").show();
+          console.log("Logged Out");
+          // user is logged out
+        }
       });
-
-      console.log(firebaseRef + "user/" + user.id);
-      console.log(userName);
     }
-    else {
-      $("#login").show();
-      console.log("Logged Out");
-      // user is logged out
-    }
-  });
+  ]);
   // Automatically syncs everywhere in realtime
   // $scope.order = $firebase(firebaseRef);
-}
 
 // function handleFileSelect(evt) {
 //   var f = evt.target.files[0];
