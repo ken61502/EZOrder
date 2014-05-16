@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" ng-app="EzOrderApp">
+<html lang="en" ng-app="myApp">
 <head>
   <meta charset="utf-8">
   <title>EzOrder</title>
@@ -7,7 +7,7 @@
   <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
   <%= csrf_meta_tags %>
 </head>
-<body id="body">
+<body id="body" ng-cloak>
 
 <%= yield %>
 

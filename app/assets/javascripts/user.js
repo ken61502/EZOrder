@@ -6,48 +6,118 @@ var firebaseRef;
 var firebaseUser;
 var firebaseOrder;
 var userName = "";
-var auth;
 
 angular.module("EzOrderApp", ["firebase"])
-  .controller("OrderController", ["$scope", "$firebase", "$firebaseSimpleLogin",
-    function($scope, $firebase, $firebaseSimpleLogin) {
-      firebaseRef = "https://ezorder.firebaseio.com/";
-      firebaseUser = new Firebase(firebaseRef + "user/");
-      firebaseOrder = new Firebase(firebaseRef + "order/");
-      console.log("In OrderCTRL");
-      auth = new FirebaseSimpleLogin(firebaseUser, function(error, user) {
-        if (error) {
-          // an error occurred while attempting login
+  .factory("OrderService", ["$firebase",
+    function($firebase) {
+        firebaseRef = "https://ezorder.firebaseio.com/";
+        firebaseUser = new Firebase(firebaseRef + "user/");
+        firebaseOrder = new Firebase(firebaseRef + "order/");
+        return {
+          getOrders: function() {
+            var orders = [];
+            var firebaseCurrentUser;
+            var auth;
+            // console.log(auth.user);
+            //if (auth.user == null) {
+              firebaseCurrentUser = firebaseUser.child("100000049331563");
+              console.log(firebaseCurrentUser);
+
+              firebaseCurrentUser.on('child_added', function(snapshot) {
+                var order = snapshot.val();
+                var url = snapshot.bc.path.m[2];
+
+                firebaseOrder.child(url).once('value', function(snapshot) {
+                  var order = snapshot.val();
+                  var url = snapshot.bc.path.m[1];
+
+                  orders.push(order);
+                  // displayOrder(url, order);
+                });
+              });
+            //}
+            return orders;
+          },
+          firebaseRef: firebaseRef,
+          firebaseUser: firebaseUser,
+          firebaseOrder: firebaseOrder
+        }
+    }
+  ])
+  .controller("OrderController", ["$scope", "OrderService", "$firebaseSimpleLogin",
+    function($scope, service, $firebaseSimpleLogin) {
+      $scope.auth = $firebaseSimpleLogin(service.firebaseUser);
+      $scope.userLogin = function() {
+        $scope.auth.$login('facebook')
+        .then(function(user){
+          console.log(user.id);
+        }, function(error){
           console.log(error);
-        }
-        else if (user) {
-          // user authenticated with Firebase
-          $("#logout").show();
-          userName = user.displayName;
-          firebaseUser = firebaseUser.child(user.id);
+        });
+      }
+      $scope.userLogout = function() {
+        $scope.auth.$logout();
+      }
+      $scope.orders = service.getOrders();
+      // function() {
+      //   if ($scope.auth.user != null) {
+      //     var orders = [];
+      //     var firebaseCurrentUser;
+      //     if ($scope.auth.user != null) {
+      //       firebaseCurrentUser = service.firebaseUser.child($scope.auth.user.id);
+      //       console.log($scope.auth.user);
+      //
+      //       service.firebaseCurrentUser.on('child_added', function(snapshot) {
+      //         var order = snapshot.val();
+      //         var url = snapshot.bc.path.m[2];
+      //
+      //         service.firebaseOrder.child(url).once('value', function(snapshot) {
+      //           var order = snapshot.val();
+      //           var url = snapshot.bc.path.m[1];
+      //
+      //           orders.push(order);
+      //           // displayOrder(url, order);
+      //         });
+      //       });
+      //     }
+      //     return orders;
+      //   }
+      // }
+      // $scope.orders = service.getOrders();
 
-          firebaseUser.on('child_added', function(snapshot) {
-            var order = snapshot.val();
-            var url = snapshot.bc.path.m[2];
-            firebaseOrder.child(url).once('value', function(snapshot) {
-              var order = snapshot.val();
-              var url = snapshot.bc.path.m[1];
-              console.log(order);
-              console.log(url);
-
-              displayOrder(url, order);
-            });
-          });
-
-          console.log(firebaseRef + "user/" + user.id);
-          console.log(userName);
-        }
-        else {
-          $("#login").show();
-          console.log("Logged Out");
-          // user is logged out
-        }
-      });
+      // auth = new FirebaseSimpleLogin(firebaseUser, function(error, user) {
+      //   if (error) {
+      //     // an error occurred while attempting login
+      //     console.log(error);
+      //   }
+      //   else if (user) {
+      //     // user authenticated with Firebase
+      //     $("#logout").show();
+      //     userName = user.displayName;
+      //     firebaseUser = firebaseUser.child(user.id);
+      //
+          // firebaseUser.on('child_added', function(snapshot) {
+          //   var order = snapshot.val();
+          //   var url = snapshot.bc.path.m[2];
+          //   firebaseOrder.child(url).once('value', function(snapshot) {
+          //     var order = snapshot.val();
+          //     var url = snapshot.bc.path.m[1];
+          //     console.log(order);
+          //     console.log(url);
+          //
+          //     displayOrder(url, order);
+          //   });
+          // });
+      //
+      //     // console.log(firebaseRef + "user/" + user.id);
+      //     console.log(userName);
+      //   }
+      //   else {
+      //     $("#login").show();
+      //     console.log("Logged Out");
+      //     // user is logged out
+      //   }
+      // });
     }
   ]);
   // Automatically syncs everywhere in realtime
@@ -86,17 +156,17 @@ function logout() {
 }
 
 $(function() {
-  $("#logout").click(function(e) {
-    $("#logout").hide();
-    logout();
-  });
-  $("#login").click(function(e) {
-    $("#login").hide();
-    login();
-  });
-
-  $("#login").hide();
-  $("#logout").hide();
+  // $("#logout").click(function(e) {
+  //   $("#logout").hide();
+  //   logout();
+  // });
+  // $("#login").click(function(e) {
+  //   $("#login").hide();
+  //   login();
+  // });
+  //
+  // $("#login").hide();
+  // $("#logout").hide();
   $("#send").click(function(e){
     var data = $("#text").val();
     var time = new Date();
