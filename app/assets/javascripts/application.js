@@ -15,6 +15,7 @@
 //= require turbolinks
 //= require angular
 //= require angular-resource.min
+//= require angular-route
 //= require firebase
 //= require firebase-simple-login
 //= require angularfire.min
