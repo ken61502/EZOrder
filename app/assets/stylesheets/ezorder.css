@@ -16,3 +16,6 @@ body {
 .hide {
 	display: none;
 }
+
+/* Remedy for "href" */
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }

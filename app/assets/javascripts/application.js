@@ -16,6 +16,7 @@
 //= require angular
 //= require angular-resource.min
 //= require angular-route
+//= require ui-bootstrap-tpls.min
 //= require firebase
 //= require firebase-simple-login
 //= require angularfire.min

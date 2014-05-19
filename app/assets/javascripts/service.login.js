@@ -15,7 +15,7 @@ angular.module('myApp.service.login', ['firebase', 'myApp.service.firebase'])
              * @param {Function} [callback]
              * @returns {*}
              */
-            login: function(email, pass, callback) {
+            login: function(callback) {
                assertAuth();
                auth.$login('facebook')
                .then(function(user){
@@ -37,8 +37,12 @@ angular.module('myApp.service.login', ['firebase', 'myApp.service.firebase'])
             logout: function() {
                assertAuth();
                auth.$logout();
-            }//,
+            },
 
+            getCurrentUser: function() {
+              assertAuth();
+              return auth.$getCurrentUser();
+            }
             // changePassword: function(opts) {
             //    assertAuth();
             //    var cb = opts.callback || function() {};

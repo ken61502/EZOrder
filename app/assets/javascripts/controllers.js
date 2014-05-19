@@ -3,8 +3,66 @@
 /* Controllers */
 
 angular.module('myApp.controllers', [])
-   .controller('HomeCtrl', ['$scope', 'syncData', function($scope, syncData) {
-      syncData('syncedValue').$bind($scope, 'syncedValue');
+   .controller('HomeCtrl', ['$rootScope', '$scope', 'syncData', 'loginService', function($rootScope, $scope, syncData, loginService) {
+      // syncData('syncedValue').$bind($scope, 'syncedValue');
+      $scope.orders = {};
+
+      $rootScope.$on("$firebaseSimpleLogin:login", function(e, user){
+        syncData(['user', $scope.auth.user.id])
+          .$on('child_removed', function(obj) {
+            // console.log(obj);
+            delete $scope.orders[obj.snapshot.name];
+          });
+        //   .$bind($scope, 'ordersIds').then(function(){
+        // });
+        syncData(['user', $scope.auth.user.id])
+          .$on('value', function(obj) {
+            var orderNames = obj.snapshot.value;
+            // orders[orderName] = '';
+            console.log(orderNames);
+            Object.keys(orderNames).forEach(function (orderName) { 
+              var value = orderNames[orderName]
+              syncData(['order', orderName]).$on('value', function(obj) {
+                $scope.orders[orderName.toString()] = obj.snapshot.value;//JSON.stringify(obj.snapshot.value);
+                // console.log($scope.orders[orderName]);
+              });
+            });
+          });
+
+      });
+
+      $scope.addOrder = function() {
+        
+      };
+
+      $scope.getDateTime = function(timestamp, limit) {
+        var date = new Date(timestamp + 3600000 * limit);
+        return date.toLocaleDateString() + ": " + date.toLocaleTimeString();
+      };
+
+      $scope.isActiveCSS = function(timestamp, limit) {
+        var currentTime = new Date();
+        if (currentTime.valueOf() < (timestamp + 3600000 * limit)) {
+          return ['panel', 'panel-warning'];
+        }
+        else {
+          return ['panel', 'panel-danger'];
+        }
+      };
+
+      $scope.login = function(cb) {
+        $scope.err = null;
+        $scope.user = "";
+        loginService.login(function(err, user) {
+          if( !err ) {
+            cb && cb(user);
+          }
+        });
+      };
+
+      $scope.logout = function() {
+        loginService.logout();
+      };
    }])
 
   .controller('ChatCtrl', ['$scope', 'syncData', function($scope, syncData) {
@@ -30,53 +88,45 @@ angular.module('myApp.controllers', [])
       $scope.createMode = false;
 
       $scope.login = function(cb) {
-         $scope.err = null;
-         if( !$scope.email ) {
-            $scope.err = 'Please enter an email address';
-         }
-         else if( !$scope.pass ) {
-            $scope.err = 'Please enter a password';
-         }
-         else {
-            loginService.login($scope.email, $scope.pass, function(err, user) {
-               $scope.err = err? err + '' : null;
-               if( !err ) {
-                  cb && cb(user);
-               }
-            });
-         }
+        $scope.err = null;
+        loginService.login(function(err, user) {
+          $scope.err = err? err + '' : null;
+          if( !err ) {
+            cb && cb(user);
+          }
+        });
       };
-
-      $scope.createAccount = function() {
-         $scope.err = null;
-         if( assertValidLoginAttempt() ) {
-            loginService.createAccount($scope.email, $scope.pass, function(err, user) {
-               if( err ) {
-                  $scope.err = err? err + '' : null;
-               }
-               else {
-                  // must be logged in before I can write to my profile
-                  $scope.login(function() {
-                     loginService.createProfile(user.uid, user.email);
-                     $location.path('/account');
-                  });
-               }
-            });
-         }
-      };
-
-      function assertValidLoginAttempt() {
-         if( !$scope.email ) {
-            $scope.err = 'Please enter an email address';
-         }
-         else if( !$scope.pass ) {
-            $scope.err = 'Please enter a password';
-         }
-         else if( $scope.pass !== $scope.confirm ) {
-            $scope.err = 'Passwords do not match';
-         }
-         return !$scope.err;
-      }
+      //
+      // $scope.createAccount = function() {
+      //    $scope.err = null;
+      //    if( assertValidLoginAttempt() ) {
+      //       loginService.createAccount($scope.email, $scope.pass, function(err, user) {
+      //          if( err ) {
+      //             $scope.err = err? err + '' : null;
+      //          }
+      //          else {
+      //             // must be logged in before I can write to my profile
+      //             $scope.login(function() {
+      //                loginService.createProfile(user.uid, user.email);
+      //                $location.path('/account');
+      //             });
+      //          }
+      //       });
+      //    }
+      // };
+      //
+      // function assertValidLoginAttempt() {
+      //    if( !$scope.email ) {
+      //       $scope.err = 'Please enter an email address';
+      //    }
+      //    else if( !$scope.pass ) {
+      //       $scope.err = 'Please enter a password';
+      //    }
+      //    else if( $scope.pass !== $scope.confirm ) {
+      //       $scope.err = 'Passwords do not match';
+      //    }
+      //    return !$scope.err;
+      // }
    }])
 
    .controller('AccountCtrl', ['$scope', 'loginService', /*'changeEmailService',*/ 'firebaseRef', 'syncData', '$location', 'FBURL', function($scope, loginService, /*changeEmailService,*/ firebaseRef, syncData, $location, FBURL) {
