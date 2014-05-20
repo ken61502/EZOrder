@@ -7,11 +7,36 @@
 <p class="status" ng-show-auth="logout">Not logged in yet...</p>
 <p class="status error" ng-show-auth="error">{{auth.error}}</p>
 
-<div ng-click="addOrder()">Add</div>
+<script type="text/ng-template" id="orderModalContent.html">
+    <div class="modal-header">
+        <h3 class="modal-title">開始揪團</h3>
+    </div>
+    <div class="modal-body">
+        <dl>
+            <dt>店家</dt>
+            <dd>
+              <select class="form-control input-xsm" ng-model="selected.store" ng-options="opt for opt in options.store"></select>
+            </dd>
+            <dt></dt>
+            <dd class="container">
+              <timepicker class="timepicker-container" ng-model="selected.timelimit" show-meridian="false" hour-step="1" minute-step="15"></timepicker>
+            </dd>
+        </dl>
+        Selected Store: <b>{{ selected.store }}</b>
+        Selected Timelimit: <b>{{ selected.timelimit }}</b>
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-primary" ng-click="ok()">OK</button>
+        <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+    </div>
+</script>
+    
+<a ng-click="popOrderModal('sm')">Add</a>
 <accordion>
-  <accordion-group ng-repeat="order in orders"  ng-class="isActiveCSS(order.timestamp, order.timelimit)">
+  <accordion-group data-hash="{{order.hash}}" is-open="order.open" ng-repeat="order in ordersToArray() | orderBy:'-timestamp':reverse"  ng-class="isActiveCSS(order.timestamp, order.timelimit)">
+      {{order.$priority}}
       <accordion-heading>
-        {{order.store}} <!-- <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"></i> -->
+        {{order.store}}<a href="/#/order/{{order.hash}}" ng-show="isActive(order.timestamp, order.timelimit)" class="glyphicon glyphicon-share share-link" popover-trigger="mouseenter" popover-placement="right" popover="Copy to Share" class="btn btn-default"></a><i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': order.open, 'glyphicon-chevron-right': !order.open}"></i>
       </accordion-heading>
       <div>
         <p>{{getDateTime(order.timestamp, 0)}} 開單，{{getDateTime(order.timestamp, order.timelimit)}} 截止</p>

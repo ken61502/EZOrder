@@ -18,4 +18,19 @@ body {
 }
 
 /* Remedy for "href" */
-.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+.nav, .pagination, .carousel, .panel-title, a { cursor: pointer; }
+
+select.input-xsm { 
+	height:24px; 
+}
+
+.timepicker-container {
+	margin: 0 auto;
+	width: 50%;
+}
+dd {
+	margin: 5px 0 0 5px;
+}
+.share-link {
+	margin: 0 0 0 10px;
+}

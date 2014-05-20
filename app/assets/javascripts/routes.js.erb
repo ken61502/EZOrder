@@ -28,5 +28,10 @@ angular.module('myApp.routes', ['ngRoute'])
          controller: 'LoginCtrl'
       });
 
+      $routeProvider.when('/order/:hashId', {
+         templateUrl: '<%= asset_path("order.html") %>',
+         controller: 'OrderCtrl'
+      });
+
       $routeProvider.otherwise({redirectTo: '/home'});
    }]);

@@ -1,0 +1,32 @@
+<accordion>
+  <accordion-group data-hash="{{order.hash}}" is-open="status.isFirstOpen" ng-class="isActiveCSS(order.timestamp, order.timelimit)">
+      {{order.$priority}}
+      <accordion-heading>
+        {{order.store}} <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.isFirstOpen, 'glyphicon-chevron-right': !status.isFirstOpen}"></i>
+      </accordion-heading>
+      <div>
+        <p>{{getDateTime(order.timestamp, 0)}} 開單，{{getDateTime(order.timestamp, order.timelimit)}} 截止</p>
+      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <td>品項</td><td>甜度</td><td>冰塊</td><td>單價</td><td>數量</td><td>總價</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="item in order.items">
+            <td>{{item.name}}</td>
+            <td>
+  	       	  <progressbar max="10" type="warning" value="item.sugar" type="warning">{{item.sugar}}/10</progressbar>
+            </td>
+            <td>
+                <progressbar max="10" type="info" value="item.ice" type="warning">{{item.ice}}/10</progressbar>
+            </td>
+            <td>{{item.price}}</td>
+            <td>{{item.quantity}}</td>
+            <td>{{item.quantity * item.price}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </accordion-group>
+  </accordion>

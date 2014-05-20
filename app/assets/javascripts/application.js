@@ -22,5 +22,4 @@
 //= require angularfire.min
 //= require bootstrap.min
 //= require sha256
-//= require spin.min
 //= require_tree .

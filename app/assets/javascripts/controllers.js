@@ -3,23 +3,38 @@
 /* Controllers */
 
 angular.module('myApp.controllers', [])
-   .controller('HomeCtrl', ['$rootScope', '$scope', 'syncData', 'loginService', function($rootScope, $scope, syncData, loginService) {
+  .controller('HomeCtrl', ['$rootScope', '$scope', 'syncData', 'loginService', '$modal', '$log', function($rootScope, $scope, syncData, loginService, $modal, $log) {
       // syncData('syncedValue').$bind($scope, 'syncedValue');
-      $scope.orders = {};
+    $scope.orders = {};
+    $scope.status = {
+      isFirstOpen: true,
+      isFirstDisabled: false
+    };
+    $scope.ordersToArray = function() {
+      var result = [];
+      angular.forEach($scope.orders, function(order, id) {
+        order["hash"] = id;
+        result.push(order);
+      });
+      return result;
+    };
+    $scope.options = {
+      store: ['五十嵐', 'ComeBuy', 'Happy Lemon']
+    };
 
-      $rootScope.$on("$firebaseSimpleLogin:login", function(e, user){
-        syncData(['user', $scope.auth.user.id])
-          .$on('child_removed', function(obj) {
-            // console.log(obj);
-            delete $scope.orders[obj.snapshot.name];
-          });
-        //   .$bind($scope, 'ordersIds').then(function(){
-        // });
-        syncData(['user', $scope.auth.user.id])
-          .$on('value', function(obj) {
-            var orderNames = obj.snapshot.value;
-            // orders[orderName] = '';
-            console.log(orderNames);
+    $rootScope.$on("$firebaseSimpleLogin:login", function(e, user){
+      syncData(['user', $scope.auth.user.id])
+        .$on('child_removed', function(obj) {
+          // console.log(obj);
+          delete $scope.orders[obj.snapshot.name];
+        });
+      //   .$bind($scope, 'ordersIds').then(function(){
+      // });
+      syncData(['user', $scope.auth.user.id])
+        .$on('value', function(obj) {
+          var orderNames = obj.snapshot.value;
+          // orders[orderName] = '';
+          if (orderNames != null) {
             Object.keys(orderNames).forEach(function (orderName) { 
               var value = orderNames[orderName]
               syncData(['order', orderName]).$on('value', function(obj) {
@@ -27,18 +42,131 @@ angular.module('myApp.controllers', [])
                 // console.log($scope.orders[orderName]);
               });
             });
-          });
+          }
+        });
 
+    });
+
+    $scope.popOrderModal = function (size) {
+      var modalInstance = $modal.open({
+        templateUrl: 'orderModalContent.html',
+        controller: 'OrderModalCtrl',
+        size: size,
+        resolve: {
+          options: function () {
+            return $scope.options;
+          }
+        }
       });
 
-      $scope.addOrder = function() {
-        
+      modalInstance.result.then(function (selected) {
+        // $scope.selected = selectedItem;
+        $scope.addOrder(selected);
+      }, function () {
+        // $log.info('Modal dismissed at: ' + new Date());
+      });
+    };
+
+    $scope.addOrder = function(selected) {
+      var time = new Date();
+      var hash = CryptoJS.SHA256(Math.random() + CryptoJS.SHA256(selected.store) + time.valueOf());
+    
+      syncData(['order', hash.toString()])
+        .$set({
+          // Orderer Name, ID, etc.
+          store: selected.store,
+          timelimit: selected.timelimit.getHours()+selected.timelimit.getMinutes()/60,
+          timestamp: time.valueOf(),
+          items: {
+            "0": {name:"檸檬綠", sugar:"10",ice:"5", price:"30", quantity:"3"},
+            "1": {name:"珍珠奶茶", sugar:"5",ice:"7", price:"35", quantity:"2"}
+          }
+        })
+        .then(function(ref){
+          syncData(['user', $scope.auth.user.id, hash.toString()])
+            .$set({
+              timestamp: time.valueOf()
+            });
+          // syncData(['user', $scope.auth.user.id, hash.toString()]).$priority = time.valueOf();
+        });
+      // syncData(['order', hash.toString()]).$priority = time.valueOf();
+    };
+
+    $scope.getDateTime = function(timestamp, limit) {
+      var date = new Date(timestamp + 3600000 * limit);
+      return date.toLocaleDateString() + ": " + date.toLocaleTimeString();
+    };
+
+    $scope.isActiveCSS = function(timestamp, limit) {
+      var currentTime = new Date();
+      if (currentTime.valueOf() < (timestamp + 3600000 * limit)) {
+        return ['panel', 'panel-warning'];
+      }
+      else {
+        return ['panel', 'panel-danger'];
+      }
+    };
+
+    $scope.isActive = function(timestamp, limit) {
+      var currentTime = new Date();
+      if (currentTime.valueOf() < (timestamp + 3600000 * limit)) {
+        return true;
+      }
+      else {
+        return false;
+      }
+    };
+
+    $scope.login = function(cb) {
+      $scope.err = null;
+      $scope.user = "";
+      loginService.login(function(err, user) {
+        if( !err ) {
+          cb && cb(user);
+        }
+      });
+    };
+
+    $scope.logout = function() {
+      loginService.logout();
+    };
+   }])
+
+  .controller('OrderModalCtrl', ['$scope', '$modalInstance', 'options', function($scope, $modalInstance, options) {
+    var d = new Date();
+    d.setHours(2);
+    d.setMinutes(0);
+
+    $scope.options = options;
+    $scope.timelimit = d;
+
+    $scope.selected = {
+      store: $scope.options.store[0],
+      timelimit: $scope.timelimit
+    };
+
+    $scope.ok = function () {
+      $modalInstance.close($scope.selected);
+    };
+
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    };
+  }])
+ 
+  .controller('OrderCtrl', ['$scope', '$routeParams', '$location', 'syncData', function($scope, $routeParams, $location, syncData) {
+      $scope.orderId = $routeParams.hashId;
+      $scope.order = null;
+      $scope.status = {
+        isFirstOpen: false
       };
 
-      $scope.getDateTime = function(timestamp, limit) {
-        var date = new Date(timestamp + 3600000 * limit);
-        return date.toLocaleDateString() + ": " + date.toLocaleTimeString();
-      };
+      syncData(['order', $scope.orderId])
+        .$on('value', function(obj) {
+          $scope.order = obj.snapshot.value;
+          $scope.order['hash'] = $scope.orderId;//JSON.stringify(obj.snapshot.value);
+          $scope.status.isFirstOpen = !$scope.status.isFirstOpen;
+        });
 
       $scope.isActiveCSS = function(timestamp, limit) {
         var currentTime = new Date();
@@ -49,20 +177,16 @@ angular.module('myApp.controllers', [])
           return ['panel', 'panel-danger'];
         }
       };
-
-      $scope.login = function(cb) {
-        $scope.err = null;
-        $scope.user = "";
-        loginService.login(function(err, user) {
-          if( !err ) {
-            cb && cb(user);
-          }
-        });
+      
+      $scope.getDateTime = function(timestamp, limit) {
+        var date = new Date(timestamp + 3600000 * limit);
+        return date.toLocaleDateString() + ": " + date.toLocaleTimeString();
       };
 
-      $scope.logout = function() {
-        loginService.logout();
-      };
+      // $scope.viewOrder = function(hashId) {
+      //   $location.url('/order' + hashId);
+      // }
+
    }])
 
   .controller('ChatCtrl', ['$scope', 'syncData', function($scope, syncData) {
