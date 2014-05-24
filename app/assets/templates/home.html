@@ -6,59 +6,42 @@
 </div>
 <p class="status" ng-show-auth="logout">Not logged in yet...</p>
 <p class="status error" ng-show-auth="error">{{auth.error}}</p>
-
-<script type="text/ng-template" id="orderModalContent.html">
-    <div class="modal-header">
-        <h3 class="modal-title">開始揪團</h3>
-    </div>
-    <div class="modal-body">
-        <dl>
-            <dt>店家</dt>
-            <dd>
-              <select class="form-control input-xsm" ng-model="selected.store" ng-options="opt for opt in options.store"></select>
-            </dd>
-            <dt></dt>
-            <dd class="container">
-              <timepicker class="timepicker-container" ng-model="selected.timelimit" show-meridian="false" hour-step="1" minute-step="15"></timepicker>
-            </dd>
-        </dl>
-        Selected Store: <b>{{ selected.store }}</b>
-        Selected Timelimit: <b>{{ selected.timelimit }}</b>
-    </div>
-    <div class="modal-footer">
-        <button class="btn btn-primary" ng-click="ok()">OK</button>
-        <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
-    </div>
-</script>
-    
-<a ng-click="popOrderModal('sm')">Add</a>
-<accordion>
-  <accordion-group data-hash="{{order.hash}}" is-open="order.open" ng-repeat="order in ordersToArray() | orderBy:'-timestamp':reverse"  ng-class="isActiveCSS(order.timestamp, order.timelimit)">
-      {{order.$priority}}
+<a ng-click="addStoreMenu()">add menu</a>
+<a ng-click="popOrderModal('sm')" class="glyphicon glyphicon-plus"></a>
+{{hashToArray(orders)}}
+<accordion close-others="accordion.oneAtATime">
+  <accordion-group data-hash="{{order.hash}}" is-open="order.open" ng-repeat="order in hashToArray(orders) | orderBy:'-timestamp':reverse"  ng-class="isActiveCSS(order.timestamp, order.timelimit)">
       <accordion-heading>
-        {{order.store}}<a href="/#/order/{{order.hash}}" ng-show="isActive(order.timestamp, order.timelimit)" class="glyphicon glyphicon-share share-link" popover-trigger="mouseenter" popover-placement="right" popover="Copy to Share" class="btn btn-default"></a><i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': order.open, 'glyphicon-chevron-right': !order.open}"></i>
+        {{order.store}}<a href="/#/order/{{order.hash}}" ng-show="isActive(order.timestamp, order.timelimit)" class="glyphicon glyphicon-share share-link" popover-trigger="mouseenter" popover-placement="right" popover="Copy to Share"></a><i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': order.open, 'glyphicon-chevron-right': !order.open}"></i>
       </accordion-heading>
       <div>
-        <p>{{getDateTime(order.timestamp, 0)}} 開單，{{getDateTime(order.timestamp, order.timelimit)}} 截止</p>
+        <p>{{getDateTime(order.timestamp, 0)}} 開單，{{getDateTime(order.timestamp, order.timelimit)}} 截止<a ng-click="removeOrder(order.hash)" class="pull-right glyphicon glyphicon-remove-circle"></a></p>
       </div>
       <table class="table">
         <thead>
           <tr>
-            <td>品項</td><td>甜度</td><td>冰塊</td><td>單價</td><td>數量</td><td>總價</td>
+            <!-- <td>Debugging</td> --><td></td><td>品項</td><td>甜度</td><td>冰塊</td><td>大小</td><td>單價</td><td>數量</td><td>總價</td>
           </tr>
         </thead>
         <tbody>
-          <tr ng-repeat="item in order.items">
+          <tr ng-repeat="item in hashToArray(order.items) | orderBy:'-name'">
+            <!-- <td>{{item}}</td> -->
+            <td><a ng-show="isActive(order.timestamp, order.timelimit)" ng-click="addItem(order.storeId, order.hash, item, 5)" class="glyphicon glyphicon-plus-sign text-warning"></a></td>
             <td>{{item.name}}</td>
             <td>
-  	       	  <progressbar max="10" type="warning" value="item.sugar" type="warning">{{item.sugar}}/10</progressbar>
+  	       	  <progressbar max="10" type="warning" value="item.sugar" type="warning">{{analog.sugar[item.sugar]}}</progressbar>
             </td>
             <td>
-                <progressbar max="10" type="info" value="item.ice" type="warning">{{item.ice}}/10</progressbar>
+                <progressbar max="10" type="info" value="item.ice" type="warning">{{analog.ice[item.ice]}}</progressbar>
             </td>
+            <td>{{analog.size[item.size]}}</td>
             <td>{{item.price}}</td>
             <td>{{item.quantity}}</td>
             <td>{{item.quantity * item.price}}</td>
+          </tr>
+          <tr ng-show="isActive(order.timestamp, order.timelimit)" >
+            <td><a ng-click="addItem(order.storeId, order.hash)" class="glyphicon glyphicon-plus-sign"></a></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
         </tbody>
       </table>

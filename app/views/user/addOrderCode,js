@@ -1,0 +1,100 @@
+    $scope.addStoreMenu = function() {
+      syncData(['store',CryptoJS.SHA256('五十嵐').toString()]).$set({
+        name: '五十嵐',
+        menu: [
+          {
+            catagory: '找好茶系列',
+            items: [{label: '茉莉綠茶', price: {'M':20,'L':25}},
+                    {label: '阿薩姆紅茶', price: {'M':20,'L':25}},
+                    {label: '四季春茶', price: {'M':20,'L':25}},
+                    {label: '檸檬綠', price: {'M':30,'L':45}},
+                    {label: '檸檬青', price: {'M':30,'L':45}},
+                    {label: '梅果綠', price: {'M':30,'L':45}},
+                    {label: '蜂蜜綠', price: {'M':30,'L':45}},
+                    {label: '桔子綠', price: {'M':30,'L':45}},
+                    {label: '8冰綠', price: {'M':30,'L':45}},
+                    {label: '養樂多綠', price: {'M':35,'L':50}},
+                    {label: '冰淇淋紅茶', price: {'M':30,'L':45}},
+                    {label: '古早味紅茶', price: {'M':30,'L':45}},
+                    {label: '芒果青茶', price: {'M':30,'L':45}},
+                    {label: '芒果綠茶', price: {'M':30,'L':45}},
+                    {label: '鮮柚綠', price: {'M':40,'L':55}}]
+          },
+          {
+            catagory: '找奶茶系列',
+            items: [{label:'奶茶',price:{'M':30,'L':45}},
+                    {label:'奶綠',price:{'M':30,'L':45}},
+                    {label:'烏龍奶茶',price:{'M':30,'L':45}},
+                    {label:'黑糖奶茶',price:{'M':35,'L':50}},
+                    {label:'焦糖奶茶',price:{'M':35,'L':50}},
+                    {label:'榛果奶茶',price:{'M':35,'L':50}},
+                    {label:'阿華田',price:{'M':35,'L':50}},
+                    {label:'可可芭蕾',price:{'M':40,'L':55}},
+                    {label:'紅茶瑪奇朵',price:{'M':30,'L':45}}]
+          },
+          {
+            catagory: '找口感系列',
+            items: [{label:'波霸紅茶',price:{'M':25,'L':35}},
+                    {label:'波霸綠茶',price:{'M':25,'L':35}},
+                    {label:'波霸青茶',price:{'M':25,'L':35}},
+                    {label:'波霸烏龍茶',price:{'M':25,'L':35}},
+                    {label:'波霸奶綠',price:{'M':30,'L':45}},
+                    {label:'波霸奶茶',price:{'M':30,'L':45}},
+                    {label:'珍珠紅茶',price:{'M':25,'L':35}},
+                    {label:'珍珠綠茶',price:{'M':25,'L':35}},
+                    {label:'珍珠青茶',price:{'M':25,'L':35}},
+                    {label:'珍珠烏龍茶',price:{'M':25,'L':35}},
+                    {label:'珍珠奶綠',price:{'M':30,'L':45}},
+                    {label:'珍珠奶茶',price:{'M':30,'L':45}},
+                    {label:'椰果奶茶',price:{'M':30,'L':45}},
+                    {label:'布丁奶茶',price:{'M':40,'L':60}},
+                    {label:'仙草奶凍',price:{'M':30,'L':45}},
+                    {label:'仙草蜜',price:{'M':30,'L':45}},
+                    {label:'愛玉冰茶',price:{'M':35,'L':50}},
+                    {label:'檸檬愛玉',price:{'M':40,'L':60}},
+                    {label:'古早味珍珠紅茶',price:{'M':30,'L':45}},
+                    {label:'古早味波霸紅茶',price:{'M':30,'L':45}}]
+          },
+          {
+            catagory: '找新鮮系列',
+            items: [{label:'檸檬汁',price:{'M':35,'L':50}},
+                    {label:'金桔檸檬',price:{'M':35,'L':50}},
+                    {label:'檸檬蜜',price:{'M':45,'L':65}},
+                    {label:'檸檬梅子',price:{'M':40,'L':55}},
+                    {label:'檸檬養樂多',price:{'M':45,'L':65}},
+                    {label:'葡萄柚多多',price:{'M':45,'L':65}},
+                    {label:'鮮桔茶',price:{'M':40,'L':55}},
+                    {label:'蜜茶',price:{'M':30,'L':45}},
+                    {label:'8冰茶',price:{'M':30,'L':45}},
+                    {label:'葡萄柚汁',price:{'M':40,'L':55}}]
+          },
+          {
+            catagory: '找拿鐵系列',
+            items: [{label:'紅茶拿鐵',price:{'M':40,'L':55}},
+                    {label:'黑糖紅茶拿鐵',price:{'M':45,'L':65}},
+                    {label:'焦糖紅茶拿鐵',price:{'M':45,'L':65}},
+                    {label:'榛果紅茶拿鐵',price:{'M':45,'L':65}},
+                    {label:'阿華田拿鐵',price:{'M':45,'L':65}},
+                    {label:'可可芭蕾拿鐵',price:{'M':50,'L':70}}]
+          },
+          {
+            catagory: '客製化系列',
+            items: [{label:'波霸鮮奶',price:{'M':40,'L':55}},
+                    {label:'珍珠鮮奶',price:{'M':40,'L':55}},
+                    {label:'仙草鮮奶',price:{'M':40,'L':55}},
+                    {label:'檸檬紅茶',price:{'M':30,'L':45}},
+                    {label:'情人茶',price:{'M':40,'L':55}}]
+          },
+          {
+            catagory: '推薦飲品',
+            items: [{label:'四季春茶',price:{'M':20,'L':25}},
+                    {label:'椰果梅果綠',price:{'M':30,'L':45}},
+                    {label:'愛玉檸檬青',price:{'M':35,'L':55}},
+                    {label:'冰淇淋紅茶',price:{'M':30,'L':45}},
+                    {label:'烏龍綠',price:{'M':20,'L':25}},
+                    {label:'混珠可可芭蕾',price:{'M':40,'L':55}},
+                    {label:'芒果冰淇淋奶綠',price:{'M':35,'L':55}}]
+          }
+        ]
+      });
+    };

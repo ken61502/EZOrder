@@ -1,0 +1,21 @@
+<div class="modal-header">
+    <h3 class="modal-title">開始揪團</h3>
+</div>
+<div class="modal-body">
+    <dl>
+        <dt>店家</dt>
+        <dd>
+          <select class="form-control input-xsm" ng-model="selected.store" ng-options="opt for opt in options.store"></select>
+        </dd>
+        <dt></dt>
+        <dd class="container">
+          <timepicker class="timepicker-container" ng-model="selected.timelimit" show-meridian="false" hour-step="1" minute-step="15"></timepicker>
+        </dd>
+    </dl>
+    Selected Store: <b>{{ selected.store }}</b>
+    Selected Timelimit: <b>{{ selected.timelimit }}</b>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok()">OK</button>
+    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

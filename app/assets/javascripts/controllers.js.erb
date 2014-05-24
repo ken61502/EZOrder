@@ -6,26 +6,50 @@ angular.module('myApp.controllers', [])
   .controller('HomeCtrl', ['$rootScope', '$scope', 'syncData', 'loginService', '$modal', '$log', function($rootScope, $scope, syncData, loginService, $modal, $log) {
       // syncData('syncedValue').$bind($scope, 'syncedValue');
     $scope.orders = {};
-    $scope.status = {
-      isFirstOpen: true,
-      isFirstDisabled: false
+    $scope.menu = {};
+    $scope.analog = {
+      sugar: {0: '無糖', 3: '微糖', 5: '半糖', 7: '少糖', 10: '全糖'},
+        ice: {0: '去冰', 3: '微冰', 5: '半冰', 7: '少冰', 10: '全冰'},
+        size: {'M': '中杯', 'L': '大杯'}
     };
-    $scope.ordersToArray = function() {
+    $scope.accordion = {
+      oneAtATime: false
+    };
+    $scope.hashToArray = function(hashMap) {
       var result = [];
-      angular.forEach($scope.orders, function(order, id) {
-        order["hash"] = id;
-        result.push(order);
+      angular.forEach(hashMap, function(value, key) {
+        if (value != null) {
+          // value["active"] = $scope.isActive(value.timestamp, value.timelimit);
+          value["hash"] = key;
+          result.push(value);
+        }
       });
+      // if (result.length > 0) {
+      //   result[0]['open'] = true;
+      // }
       return result;
     };
+
     $scope.options = {
-      store: ['五十嵐', 'ComeBuy', 'Happy Lemon']
+      store: ['五十嵐']//, 'COMEBUY', 'happylemon']
     };
+    // $scope.getMenu = function () {
+    //   var menu = {};
+    //   console.log("In getMenu()");
+    //   angular.forEach($scope.menuCount, function(menu, storeId) {
+    //     syncData(['store', storeId]).$on('value', function(obj) {
+    //       if( menu[storeId] == null) {
+    //         menu[storeId] = obj;
+    //       }
+    //     }); 
+    //   });
+    //   return menu;
+    // }
 
     $rootScope.$on("$firebaseSimpleLogin:login", function(e, user){
       syncData(['user', $scope.auth.user.id])
         .$on('child_removed', function(obj) {
-          // console.log(obj);
+          console.log(obj);
           delete $scope.orders[obj.snapshot.name];
         });
       //   .$bind($scope, 'ordersIds').then(function(){
@@ -33,13 +57,27 @@ angular.module('myApp.controllers', [])
       syncData(['user', $scope.auth.user.id])
         .$on('value', function(obj) {
           var orderNames = obj.snapshot.value;
-          // orders[orderName] = '';
+
           if (orderNames != null) {
-            Object.keys(orderNames).forEach(function (orderName) { 
-              var value = orderNames[orderName]
+            Object.keys(orderNames).forEach(function (orderName) {
+
+              var value = orderNames[orderName];
               syncData(['order', orderName]).$on('value', function(obj) {
-                $scope.orders[orderName.toString()] = obj.snapshot.value;//JSON.stringify(obj.snapshot.value);
-                // console.log($scope.orders[orderName]);
+
+                var orderObj = obj.snapshot.value;
+                if (orderObj != null) {
+
+                  var storeId = orderObj.storeId;
+                  $scope.orders[orderName.toString()] = orderObj;
+                  angular.forEach($scope.orders, function (order, id) {
+                    order.open = order.active = $scope.isActive(order.timestamp, order.timelimit);
+                  });
+                  if ($scope.menu[storeId] == null && $scope.isActive(orderObj.timestamp, orderObj.timelimit)) {
+                    syncData(['store',storeId]).$on('loaded', function(obj) {
+                      $scope.menu[storeId] = obj;
+                    });
+                  }
+                }
               });
             });
           }
@@ -49,7 +87,7 @@ angular.module('myApp.controllers', [])
 
     $scope.popOrderModal = function (size) {
       var modalInstance = $modal.open({
-        templateUrl: 'orderModalContent.html',
+        templateUrl: '<%= asset_path("orderModalContent.html") %>',
         controller: 'OrderModalCtrl',
         size: size,
         resolve: {
@@ -60,36 +98,113 @@ angular.module('myApp.controllers', [])
       });
 
       modalInstance.result.then(function (selected) {
-        // $scope.selected = selectedItem;
         $scope.addOrder(selected);
-      }, function () {
-        // $log.info('Modal dismissed at: ' + new Date());
       });
     };
 
     $scope.addOrder = function(selected) {
       var time = new Date();
       var hash = CryptoJS.SHA256(Math.random() + CryptoJS.SHA256(selected.store) + time.valueOf());
-    
+      var storeId = CryptoJS.SHA256(selected.store).toString();
       syncData(['order', hash.toString()])
         .$set({
           // Orderer Name, ID, etc.
           store: selected.store,
+          storeId: storeId,
           timelimit: selected.timelimit.getHours()+selected.timelimit.getMinutes()/60,
           timestamp: time.valueOf(),
-          items: {
-            "0": {name:"檸檬綠", sugar:"10",ice:"5", price:"30", quantity:"3"},
-            "1": {name:"珍珠奶茶", sugar:"5",ice:"7", price:"35", quantity:"2"}
-          }
+          items: {}
         })
         .then(function(ref){
           syncData(['user', $scope.auth.user.id, hash.toString()])
             .$set({
               timestamp: time.valueOf()
             });
-          // syncData(['user', $scope.auth.user.id, hash.toString()]).$priority = time.valueOf();
         });
-      // syncData(['order', hash.toString()]).$priority = time.valueOf();
+    };
+
+    $scope.removeOrder = function(hashId) {
+      var modalInstance = $modal.open({
+        templateUrl: '<%= asset_path("agreeModalContent.html") %>',
+        controller: 'AgreeCtrl',
+        size: 'sm',
+        resolve: {
+          action: function() {
+            return '刪除這份訂單';
+          }
+        }
+      });
+
+      modalInstance.result.then(function (isOk) {
+        if (isOk) {
+          syncData(['user', $scope.auth.user.id])
+          .$remove(hashId).then(function() {
+            syncData(['order', hashId])
+            .$remove();
+          });
+        }
+      });
+    }
+
+    $scope.addItem = function(storeId, hashId, item, step) {
+      var newItem;
+      if (typeof item !== 'undefined') {
+        newItem = JSON.parse(JSON.stringify(item));
+        newItem.quantity = 1;
+      }
+      else {
+        newItem = {name:"", catagory:"", hash:"", sugar:"10",ice:"10", size: "M", price: "", quantity:"1"};
+      }
+      step = typeof step !== 'undefined' ? step : 1;
+      console.log(newItem);
+      console.log(step);
+
+      var modalInstance = $modal.open({
+        templateUrl: '<%= asset_path("menuModalContent.html") %>',
+        controller: 'AddItemCtrl',
+        size: 'sm',
+        resolve: {
+          menu: function() {
+            return $scope.menu[storeId];
+          },
+          item: function() {
+            return newItem;
+          },
+          step: function() {
+            return step;
+          }
+        }
+      });
+
+      modalInstance.result.then(function(item) {
+        syncData(['order', hashId, 'items']).$transaction(function(currentVal){
+          if (currentVal === null) {
+            console.log('No Items');
+            var obj = {};
+            obj[item.hash] = item;
+            return obj;
+          }
+          else {
+            if (currentVal[item.hash] == null) {
+              console.log('Have Items but dont have this item');
+              currentVal[item.hash] = item;
+              console.log(currentVal);
+              return currentVal;
+            }
+            else {
+              console.log('Have Items and have this item: update quantity');
+              currentVal[item.hash]['quantity'] = (parseInt(currentVal[item.hash]['quantity']) + parseInt(item['quantity'])).toString();
+              console.log(currentVal);
+              return currentVal;
+            }
+          }
+          return;
+        });
+      });
+    };
+
+    $scope.sumOfPrice = function () {
+
     };
 
     $scope.getDateTime = function(timestamp, limit) {
@@ -130,6 +245,7 @@ angular.module('myApp.controllers', [])
     $scope.logout = function() {
       loginService.logout();
     };
+
    }])
 
   .controller('OrderModalCtrl', ['$scope', '$modalInstance', 'options', function($scope, $modalInstance, options) {
@@ -154,6 +270,104 @@ angular.module('myApp.controllers', [])
     };
   }])
  
+  .controller('AgreeCtrl', ['$scope', '$modalInstance', 'action', function($scope, $modalInstance, action) {
+    $scope.action = action;
+
+    $scope.ok = function () {
+      $modalInstance.close(true);
+    };
+
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    };
+  }])
+
+  .controller('AddItemCtrl', ['$scope', '$modalInstance', 'menu', 'item', 'step', function($scope, $modalInstance, menu, item, step) {
+    $scope.menu = menu.menu;
+    $scope.store = menu.name;
+    $scope.totalSteps = 6;
+    $scope.step = step;
+    $scope.stepTpl = ['tpl-item.html', 'tpl-sugar.html', 'tpl-ice.html', 'tpl-size.html','tpl-quantity.html', 'tpl-confirm.html'];
+    $scope.stepTitle = ['選商品', '調整甜度', '調整冰塊', '大小杯', '數量', '請確認'];
+    $scope.selectedItem = item;
+    $scope.options = {
+      sugar: {0: '無糖', 3: '微糖', 5: '半糖', 7: '少糖', 10: '全糖'},
+      ice: {0: '去冰', 3: '微冰', 5: '半冰', 7: '少冰', 10: '全冰'},
+      size: {'M': '中杯', 'L': '大杯'}
+    };
+
+    $scope.increment = function (which) {
+      if (which == 'sugar' || which == 'ice') {
+        if ($scope.selectedItem[which] == '0' || $scope.selectedItem[which] == '7') {
+          $scope.selectedItem[which] = (parseInt($scope.selectedItem[which]) + 3).toString();
+        }
+        else if ($scope.selectedItem[which] != '10') {
+          $scope.selectedItem[which] = (parseInt($scope.selectedItem[which]) + 2).toString();
+        }
+      }
+      else if (which == 'quantity') {
+        $scope.selectedItem[which] = (parseInt($scope.selectedItem[which]) + 1).toString();
+      }
+      else if (which == 'size') {
+        if ($scope.selectedItem[which] == 'M') {
+          $scope.selectedItem[which] = 'L';
+        }
+      }
+    }
+    $scope.decrement = function (which) {
+      if (which == 'sugar' || which == 'ice') {
+        if ($scope.selectedItem[which] == '10' || $scope.selectedItem[which] == '3') {
+          $scope.selectedItem[which] = (parseInt($scope.selectedItem[which]) - 3).toString();
+        }
+        else if ($scope.selectedItem[which] != '0') {
+          $scope.selectedItem[which] = (parseInt($scope.selectedItem[which]) - 2).toString();
+        }
+      }
+      else if (which == 'quantity') {
+        if ($scope.selectedItem[which] > 1) {
+          $scope.selectedItem[which] = (parseInt($scope.selectedItem[which]) - 1).toString();
+        }
+      }
+      else if (which == 'size') {
+        if ($scope.selectedItem[which] == 'L') {
+          $scope.selectedItem[which] = 'M';
+        }
+      }
+    }
+    $scope.clickItem = function(catagory, item) {
+      $scope.selectedItem.name = item.label;
+      $scope.selectedItem.catagory = catagory.catagory;
+      
+      angular.forEach($scope.menu, function(cata, id) {
+        if (cata != null) {
+          if (cata.catagory == catagory.catagory) {
+            angular.forEach(cata.items, function(i, id) {
+              if (i.label == item.label) {
+                $scope.selectedItem.price = i.price;
+              }
+            });
+          }
+        }
+      });
+    }
+    $scope.ok = function () {
+      var tempItem = {
+        'name':$scope.selectedItem.name,
+        'sugar':$scope.selectedItem.sugar,
+        'ice':$scope.selectedItem.ice,
+        'size':$scope.selectedItem.size
+      };
+      console.log(tempItem);
+      $scope.selectedItem['hash'] = CryptoJS.SHA256(JSON.stringify(tempItem)).toString();
+      $scope.selectedItem['price'] = $scope.selectedItem['price'][$scope.selectedItem['size']];
+      $modalInstance.close($scope.selectedItem);
+    };
+
+    $scope.cancel = function () {
+      $modalInstance.dismiss('cancel');
+    };
+  }])
+
   .controller('OrderCtrl', ['$scope', '$routeParams', '$location', 'syncData', function($scope, $routeParams, $location, syncData) {
       $scope.orderId = $routeParams.hashId;
       $scope.order = null;

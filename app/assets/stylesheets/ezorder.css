@@ -34,3 +34,8 @@ dd {
 .share-link {
 	margin: 0 0 0 10px;
 }
+
+.additem-container {
+	margin: 0 auto;
+	width: 38%;
+}

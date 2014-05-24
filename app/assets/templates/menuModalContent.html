@@ -1,0 +1,110 @@
+<div class="modal-header">
+    <h3 class="modal-title text-primary">{{store}} - {{stepTitle[step-1]}}</h3>
+</div>
+<div class="modal-body container" id="tpl-content" ng-include src="stepTpl[step-1]">
+  <!-- Tpl Here -->
+</div>
+<pager items-per-page="1" total-items="totalSteps" ng-model="step"></pager>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-show="step == totalSteps" ng-click="ok()">完成</button>
+    <button class="btn btn-warning" ng-click="cancel()">取消</button>
+</div>
+
+<script type="text/ng-template" id="tpl-item.html">
+  <div class="list-group" ng-repeat="catagory in menu">
+    <a class="list-group-item list-group-item-success">{{catagory.catagory}}<a>
+    <a href="" class="list-group-item"  ng-class="{'active list-group-item-success': selectedItem.name == item.label}" ng-click="clickItem(catagory, item)" ng-repeat="item in catagory.items">{{item.label}}</a>
+  </div>
+</script>
+<script type="text/ng-template" id="tpl-sugar.html">
+  <div>
+    <table class="additem-container">
+      <tbody>
+        <tr class="text-center">
+          <td><a ng-click="increment('sugar')" class="btn btn-link"><span class="glyphicon glyphicon-chevron-up"></span></a>
+          </td>
+        </tr>
+        <tr>
+          <td style="width:50px;" class="form-group" ng-class="{'has-error': invalidHours}">
+            <input type="text" ng-model="options.sugar[selectedItem.sugar]" class="form-control text-center ng-pristine ng-valid" ng-readonly="readonlyInput" maxlength="2"></input>
+          </td>
+        </tr>
+        <tr class="text-center">
+          <td><a ng-click="decrement('sugar')" class="btn btn-link"><span class="glyphicon glyphicon-chevron-down"></span></a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</script>
+
+<script type="text/ng-template" id="tpl-ice.html">
+  <div>
+    <table class="additem-container">
+      <tbody>
+        <tr class="text-center">
+          <td><a ng-click="increment('ice')" class="btn btn-link"><span class="glyphicon glyphicon-chevron-up"></span></a>
+          </td>
+        </tr>
+        <tr>
+          <td style="width:50px;" class="form-group" ng-class="{'has-error': invalidHours}">
+            <input type="text" ng-model="options.ice[selectedItem.ice]" ng-change="update()" class="form-control text-center ng-pristine ng-valid" ng-readonly="readonlyInput" maxlength="2"></input>
+          </td>
+        </tr>
+        <tr class="text-center">
+          <td><a ng-click="decrement('ice')" class="btn btn-link"><span class="glyphicon glyphicon-chevron-down"></span></a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</script>
+
+<script type="text/ng-template" id="tpl-size.html">
+  <div>
+    <table class="additem-container">
+      <tbody>
+        <tr class="text-center">
+          <td><a ng-click="increment('size')" class="btn btn-link"><span class="glyphicon glyphicon-chevron-up"></span></a>
+          </td>
+        </tr>
+        <tr>
+          <td style="width:50px;" class="form-group" ng-class="{'has-error': invalidHours}">
+            <input type="text" ng-model="selectedItem.size" class="form-control text-center ng-pristine ng-valid" ng-readonly="readonlyInput" maxlength="2"></input>
+          </td>
+        </tr>
+        <tr class="text-center">
+          <td><a ng-click="decrement('size')" class="btn btn-link"><span class="glyphicon glyphicon-chevron-down"></span></a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</script>
+
+<script type="text/ng-template" id="tpl-quantity.html">
+  <div>
+    <table class="additem-container">
+      <tbody>
+        <tr class="text-center">
+          <td><a ng-click="increment('quantity')" class="btn btn-link"><span class="glyphicon glyphicon-chevron-up"></span></a>
+          </td>
+        </tr>
+        <tr>
+          <td style="width:50px;" class="form-group" ng-class="{'has-error': invalidHours}">
+            <input type="text" ng-model="selectedItem.quantity" class="form-control text-center ng-pristine ng-valid" ng-readonly="readonlyInput" maxlength="2"></input>
+          </td>
+        </tr>
+        <tr class="text-center">
+          <td><a ng-click="decrement('quantity')" class="btn btn-link"><span class="glyphicon glyphicon-chevron-down"></span></a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</script>
+
+<script type="text/ng-template" id="tpl-confirm.html">
+  <p>{{selectedItem.name}} {{options.sugar[selectedItem.sugar]}}{{options.ice[selectedItem.ice]}} {{options.size[selectedItem.size]}} {{selectedItem.quantity}}份</p>
+  <p>決定好了嗎？</p>
+</script>
